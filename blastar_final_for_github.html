@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Blastar — El universo que comenzó con una idea</title>
+<style>
+  :root{--bg0:#050014;--bg1:#08112a;--accent:#7fd3ff;--accent2:#a58cff;--glass: rgba(255,255,255,0.06)}
+  html,body{height:100%;margin:0;background:radial-gradient(ellipse at 20% 10%, rgba(120,140,220,0.12), transparent 10%), linear-gradient(180deg,var(--bg0),var(--bg1)); color:#e6f0ff; font-family: "Segoe UI", Roboto, Arial, monospace;}
+  .page{min-height:100%;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;}
+  .card{width:920px;max-width:96vw;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.06));border-radius:14px;box-shadow:0 10px 40px rgba(2,6,20,0.6);overflow:hidden;border:1px solid rgba(255,255,255,0.04);display:flex;gap:0;}
+  .left{flex:1;padding:28px 24px;display:flex;flex-direction:column;justify-content:center;gap:14px;background:linear-gradient(135deg, rgba(15,10,30,0.2), rgba(5,10,35,0.15));position:relative;}
+  .brand{font-weight:700;font-size:18px;letter-spacing:0.6px;color:var(--accent);display:flex;gap:10px;align-items:center}
+  .title{font-size:22px;font-weight:800;line-height:1.05;margin-top:4px}
+  .lead{color:rgba(230,240,255,0.85);font-size:14px;max-width:44ch}
+  .buttons{display:flex;gap:12px;margin-top:10px}
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;padding:10px 16px;border-radius:10px;color:#021428;font-weight:700;cursor:pointer;box-shadow:0 6px 18px rgba(125,150,200,0.12);transform:translateY(0);transition:transform .14s ease, box-shadow .14s ease;}
+  .btn:active{transform:translateY(2px);box-shadow:none}
+  .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.08);color:#d8e8ff;font-weight:600;}
+  .foot{font-size:12px;opacity:0.8;margin-top:12px}
+  .right{width:420px;min-width:360px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(1,1,10,0.06));display:flex;flex-direction:column;align-items:center;padding:16px;gap:10px;position:relative;}
+  canvas{width:360px;height:480px;background:transparent;border-radius:6px;box-shadow:0 8px 30px rgba(2,6,20,0.6);image-rendering:pixelated}
+  .hud{width:100%;display:flex;justify-content:space-between;padding:6px 10px;font-family:monospace;font-size:13px;color:#cfecff}
+  .overlayIntro{position:absolute;inset:0;background:radial-gradient(circle at 50% 20%, rgba(160,180,255,0.06), transparent 10%), linear-gradient(180deg, rgba(10,8,30,0.6), rgba(4,6,18,0.6));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;backdrop-filter: blur(2px);transition:opacity .5s ease;}
+  .overlayIntro.hidden{opacity:0;pointer-events:none}
+  .introText{font-size:15px;line-height:1.35;text-align:center;max-width:36ch;color:rgba(220,235,255,0.95)}
+  .playGlow{position:absolute;left:50%;transform:translateX(-50%);bottom:-40px;width:240px;height:100px;border-radius:50%;filter:blur(40px);opacity:0.7;background:radial-gradient(circle at 50% 40%, rgba(130,200,255,0.22), transparent 40%);pointer-events:none}
+  /* retro flicker title */
+  .retro{font-family: 'Courier New', monospace; color:var(--accent2); text-shadow: 0 0 6px rgba(165,140,255,0.6);}
+  .author{position:absolute;left:16px;bottom:12px;font-size:12px;opacity:0.9}
+  /* small responsive */
+  @media (max-width:900px){ .card{flex-direction:column;align-items:center} .right{width:100%;min-width:auto} .left{width:100%;padding:18px} canvas{width:300px;height:400px} }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="card" id="card">
+    <div class="left">
+      <div class="brand"><span style="font-weight:900;font-size:14px">Blastar</span><span style="opacity:0.7">— El universo que comenzó con una idea</span></div>
+      <div class="title retro">Un pequeño universo creado a partir de una idea</div>
+      <div class="lead">En 1984, un joven llamado Elon Musk escribió su primer universo digital: <strong>Blastar</strong>. Hoy tú continúas esa historia. Digitaliza tus ideas con propósito, significado y libertad.</div>
+      <div class="buttons">
+        <button class="btn" id="btnPlay">JUGAR</button>
+        <button class="btn secondary" id="btnLearn">APRENDE MÁS</button>
+      </div>
+      <div class="foot">Recomendado: usar en navegador moderno. Controles: ← / → (mover), Barra espaciadora (disparar). En móvil aparecen botones táctiles.</div>
+      <div class="author">— José Astucuri</div>
+      <div class="playGlow" aria-hidden="true"></div>
+    </div>
+    <div class="right">
+      <div class="hud"><div>Score: <span id="score">0</span></div><div>Lives: <span id="lives">3</span></div><div>Level: <span id="level">1</span></div></div>
+      <canvas id="c" width="360" height="480"></canvas>
+      <div style="font-size:12px;color:rgba(200,220,255,0.7)">Toque JUGAR para iniciar — El easter egg aparece al experimentar</div>
+      <div class="overlayIntro" id="overlay">
+        <div style="width:86px;height:86px;border-radius:16px;background:linear-gradient(135deg, rgba(127,211,255,0.12), rgba(165,140,255,0.12));display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:20px">🌌</div>
+        <div class="introText">En 1984, un joven llamado Elon Musk escribió su primer universo digital: <strong>Blastar</strong>. <br/>Hoy es tu turno de experimentar.</div>
+        <button class="btn" id="overlayPlay">COMENZAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- Game core (adapted & integrated) ---
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+let score = 0, lives = 3, level = 1;
+const player = {x: W/2, y: H-36, w: 20, h: 10, speed: 220, cool:0};
+const bullets = [];
+const enemies = [];
+let keys = {};
+let last = 0; let spawnTimer = 0; let gameOver=false;
+
+function reset(){ score=0; lives=3; level=1; enemies.length=0; bullets.length=0; player.x=W/2; gameOver=false; window.easterShown=false; updateHUD(); }
+
+function spawnWave(){
+  const cols = 6 + Math.min(level-1,4);
+  const gap = 34;
+  for(let r=0;r<2+Math.min(level-1,3);r++){
+    for(let c=0;c<cols;c++){
+      enemies.push({x:30 + c*gap, y: 30 + r*30, w:18,h:12, vx: (Math.random()*40-20), hp:1});
+    }
+  }
+}
+
+function update(dt){
+  if(gameOver) return;
+  if(keys['ArrowLeft']||keys['a']) player.x -= player.speed*dt;
+  if(keys['ArrowRight']||keys['d']) player.x += player.speed*dt;
+  player.x = Math.max(12, Math.min(W-12, player.x));
+  player.cool -= dt;
+  if((keys[' ']||keys['Space']) && player.cool<=0){ bullets.push({x:player.x, y:player.y-8, vy:-360}); player.cool=0.2 }
+
+  for(let i=bullets.length-1;i>=0;i--){ const b=bullets[i]; b.y += b.vy*dt; if(b.y < -10) bullets.splice(i,1); }
+
+  spawnTimer += dt;
+  if(spawnTimer > Math.max(2.3 - level*0.15, 0.9)){ enemies.forEach(e=> e.x += Math.sin(performance.now()/600 + e.x)*0.8 ); spawnTimer = 0; }
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    e.y += 6*dt + level*0.6*dt;
+    if(Math.random()<0.002+level*0.001) e.vx += (Math.random()-0.5)*6;
+    e.x += e.vx*dt;
+    if(e.x < 10) e.x = 10; if(e.x>W-20) e.x=W-20;
+    for(let j=bullets.length-1;j>=0;j--){
+      const b=bullets[j];
+      if(b.x > e.x-10 && b.x < e.x+e.w+10 && b.y > e.y-6 && b.y < e.y+e.h+6){
+        bullets.splice(j,1);
+        e.hp--; if(e.hp<=0){ enemies.splice(i,1); score += 10; updateHUD(); }
+        break;
+      }
+    }
+    if(e.y > H-60){ enemies.splice(i,1); lives--; updateHUD(); if(lives<=0) gameOver=true }
+  }
+  if(enemies.length===0 && !gameOver){ level++; spawnWave(); updateHUD(); }
+}
+
+function draw(){
+  // soft starfield background (galaxy-like)
+  ctx.clearRect(0,0,W,H);
+  // vertical gradient glow
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0, 'rgba(40,30,70,0.06)');
+  g.addColorStop(1, 'rgba(2,4,10,0.04)');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+  // stars
+  for(let i=0;i<80;i++){
+    const x = (i*47)%W; const y = (i*91)%H; ctx.fillStyle = (i%12===0? 'rgba(160,200,255,0.95)':'rgba(140,160,200,0.45)'); ctx.fillRect(x, y, 1, 1);
+  }
+  // player
+  ctx.save(); ctx.translate(player.x, player.y);
+  ctx.fillStyle='#bfe'; ctx.beginPath(); ctx.moveTo(-12,8); ctx.lineTo(0,-12); ctx.lineTo(12,8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  // bullets
+  ctx.fillStyle='#e6f7ff'; bullets.forEach(b=> ctx.fillRect(b.x-1,b.y-6,2,6));
+  // enemies
+  enemies.forEach(e=>{
+    ctx.save(); ctx.translate(e.x,e.y);
+    ctx.fillStyle='#ff6b6b'; ctx.fillRect(-e.w/2,-e.h/2,e.w,e.h);
+    ctx.fillStyle='#400'; ctx.fillRect(-e.w/2+2,-e.h/2+2,4,4);
+    ctx.restore();
+  });
+  // HUD already updated separately
+  // show easter egg if triggered (handled in drawGalaxyAnim)
+  if(gameOver){
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff'; ctx.font='22px monospace'; ctx.textAlign='center'; ctx.fillText('GAME OVER', W/2, H/2 - 10);
+    ctx.font='14px monospace'; ctx.fillText('Presiona Reiniciar para jugar otra vez', W/2, H/2 + 18);
+  }
+}
+
+function loop(ts){
+  if(!last) last = ts; const dt = Math.min(0.04, (ts-last)/1000); last = ts;
+  update(dt); draw(); requestAnimationFrame(loop);
+}
+
+function updateHUD(){
+  document.getElementById('score').textContent = score;
+  document.getElementById('lives').textContent = lives;
+  document.getElementById('level').textContent = level;
+}
+
+// --- Input ---
+window.addEventListener('keydown', e=>{ keys[e.key] = true; if(e.key===' '){ e.preventDefault(); } });
+window.addEventListener('keyup', e=>{ keys[e.key] = false; });
+
+// touch buttons
+function makeTouchButtons(){
+  if(window.innerWidth < 700){
+    const left = document.createElement('button'); left.textContent='◀';
+    const right = document.createElement('button'); right.textContent='▶';
+    const sp = document.createElement('button'); sp.textContent='FIRE';
+    [left,right,sp].forEach(b=>{ b.style.position='fixed'; b.style.bottom='14px'; b.style.zIndex=9999; b.style.opacity=0.9; b.style.width='64px'; b.style.height='48px'; b.style.borderRadius='10px'; b.style.fontSize='16px'; b.style.background='rgba(255,255,255,0.04)'; b.style.color='white'; document.body.appendChild(b)});
+    left.style.left='12px'; right.style.left='86px'; sp.style.right='12px';
+    left.addEventListener('touchstart', ()=> keys['ArrowLeft']=true); left.addEventListener('touchend', ()=> keys['ArrowLeft']=false);
+    right.addEventListener('touchstart', ()=> keys['ArrowRight']=true); right.addEventListener('touchend', ()=> keys['ArrowRight']=false);
+    sp.addEventListener('touchstart', ()=> keys[' ']=true); sp.addEventListener('touchend', ()=> keys[' ']=false);
+  }
+}
+makeTouchButtons();
+
+// --- Easter egg: galaxy animation for both gameOver or reaching score threshold ---
+let easterRunning = false;
+function triggerEaster(){
+  if(window.easterShown || easterRunning) return;
+  window.easterShown = true; easterRunning = true;
+  const rings = [];
+  for(let i=0;i<10;i++){ rings.push({r:20 + i*18, a: Math.random()*Math.PI*2, s:0.02 + Math.random()*0.04, o:0.02 + Math.random()*0.06}); }
+  const t0 = performance.now();
+  function drawGalaxyFrame(now){
+    const elapsed = (now - t0)/1000;
+    // dark overlay
+    ctx.fillStyle='rgba(0,0,0,0.62)'; ctx.fillRect(0,0,W,H);
+    // soft galaxy glow
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for(let k=0;k<rings.length;k++){
+      const R = rings[k].r + elapsed*40;
+      const alpha = Math.max(0, 0.9 - elapsed*0.7 - k*0.03);
+      const grd = ctx.createRadialGradient(W/2, H/2, R*0.05, W/2, H/2, R);
+      grd.addColorStop(0, `rgba(150,200,255,${alpha*0.08})`);
+      grd.addColorStop(1, `rgba(20,10,40,0)`);
+      ctx.fillStyle = grd;
+      ctx.fillRect(W/2 - R, H/2 - R, R*2, R*2);
+    }
+    ctx.restore();
+    // poetic text lines (with fade-in per line)
+    ctx.fillStyle='#e6f7ff'; ctx.textAlign='center'; ctx.font='16px monospace';
+    const lines = [
+      '🌌 Has experimentado.',
+      'No hay victoria ni derrota, solo creación.',
+      'Como Elon, un día programó su universo,',
+      'hoy tú digitalizas el tuyo…',
+      'con propósito, significado y libertad.'
+    ];
+    for(let i=0;i<lines.length;i++){
+      const fade = Math.min(1, Math.max(0, (elapsed - 0.25*i) * 0.9));
+      ctx.globalAlpha = fade;
+      ctx.fillText(lines[i], W/2, H/2 - 40 + i*22);
+    }
+    ctx.globalAlpha = 1;
+    if(elapsed < 3.2){ requestAnimationFrame(drawGalaxyFrame); } else { easterRunning = false; if(gameOver){ /* keep gameover overlay visible after */ } }
+  }
+  requestAnimationFrame(drawGalaxyFrame);
+}
+
+// Hook to check conditions: both when gameOver becomes true and when score reaches threshold
+const SCORE_FOR_EASTER = 300;
+const origUpdate = update;
+update = function(dt){
+  origUpdate(dt);
+  if(!window.easterShown && (gameOver || score >= SCORE_FOR_EASTER)){ triggerEaster(); }
+};
+
+// UI: overlay play button
+const overlay = document.getElementById('overlay');
+document.getElementById('overlayPlay').addEventListener('click', ()=>{
+  overlay.classList.add('hidden');
+  reset(); spawnWave(); last=0; requestAnimationFrame(loop);
+});
+document.getElementById('btnPlay').addEventListener('click', ()=>{
+  overlay.classList.add('hidden');
+  reset(); spawnWave(); last=0; requestAnimationFrame(loop);
+});
+document.getElementById('btnLearn').addEventListener('click', ()=>{
+  alert('Próximamente: aquí podrás enlazar tu landing o canal. Por ahora, guarda esta experiencia y compártela.');
+});
+
+// show code (developer)
+document.getElementById('c').addEventListener('dblclick', ()=>{
+  const w = window.open('','_blank');
+  w.document.write('<pre style="white-space:pre-wrap;background:#050722;color:#cfe;padding:12px;">'+escapeHtml(document.documentElement.outerHTML)+'</pre>');
+});
+
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// restart button
+const restartBtn = document.createElement('button');
+restartBtn.textContent = 'Reiniciar';
+restartBtn.style.position = 'absolute';
+restartBtn.style.left = '14px';
+restartBtn.style.bottom = '16px';
+restartBtn.style.padding = '8px 10px';
+restartBtn.style.borderRadius = '8px';
+restartBtn.style.border = 'none';
+restartBtn.style.background = 'rgba(255,255,255,0.04)';
+restartBtn.style.color = 'white';
+restartBtn.style.fontWeight = '700';
+restartBtn.style.cursor = 'pointer';
+document.querySelector('.right').appendChild(restartBtn);
+restartBtn.addEventListener('click', ()=>{ reset(); spawnWave(); });
+
+// initial
+updateHUD();
+</script>
+</body>
+</html>
